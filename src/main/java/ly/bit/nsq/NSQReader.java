@@ -12,9 +12,12 @@ import ly.bit.nsq.exceptions.NSQException;
 import ly.bit.nsq.lookupd.AbstractLookupd;
 import ly.bit.nsq.lookupd.BasicLookupdJob;
 import ly.bit.nsq.util.ConnectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class NSQReader {
+	private static final Logger log = LoggerFactory.getLogger(NSQReader.class);
 	
 	protected int requeueDelay;
 	protected int maxRetries;
@@ -67,7 +70,7 @@ public abstract class NSQReader {
 	}
 	
 	public void shutdown(){
-		System.out.println("Received signal to shut down");
+		log.info("NSQReader received shutdown signal, shutting down connections");
 		for(Connection conn: this.connections.values()){
 			conn.close();
 		}
@@ -91,7 +94,7 @@ public abstract class NSQReader {
 			try {
 				msg.getConn().send(ConnectionUtils.requeue(msg.getId(), newDelay));
 			} catch (NSQException e) {
-				e.printStackTrace();
+				log.error("Error requeueing message to {}, will close the connection", msg.getConn());
 				msg.getConn().close();
 			}
 		}
@@ -101,7 +104,7 @@ public abstract class NSQReader {
 		try {
 			msg.getConn().send(ConnectionUtils.finish(msg.getId()));
 		} catch (NSQException e) {
-			e.printStackTrace();
+			log.error("Error finishing message {} (from {}). Will close connection.", msg, msg.getConn());
 			msg.getConn().close();
 		}
 	}
