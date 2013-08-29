@@ -78,7 +78,7 @@ public class NSQProducer {
 	 * @param message
 	 * @throws NSQException
 	 */
-	public void put(String message) throws NSQException {
+	public void put(String message) throws NSQException, IOException {
 		HttpPost post = null;
 		try {
 			post = new HttpPost(url);
@@ -93,8 +93,6 @@ public class NSQProducer {
 		} catch (UnsupportedEncodingException e) {
 			throw new NSQException(e);
 		} catch (ClientProtocolException e) {
-			throw new NSQException(e);
-		} catch (IOException e) {
 			throw new NSQException(e);
 		} finally {
 			if (post != null) {
@@ -129,6 +127,14 @@ public class NSQProducer {
 				// Log the error here since caller probably won't ever check the future.
 				log.error("Error posting NSQ message:", e);
 				throw e;
+			} catch (org.apache.http.conn.ConnectionPoolTimeoutException e) {
+				// Don't dump a stack trace, this is somewhat expected
+				log.warn("Timeout posting to NSQ, msg is probably lost.");
+				throw new NSQException(e);
+			} catch (IOException e) {
+				// Don't dump a stack trace, this is somewhat expected
+				log.warn("IOException posting to NSQ, msg is probably lost.");
+				throw new NSQException(e);
 			} catch (Exception e) {
 				// Log the error here since caller probably won't ever check the future.
 				log.error("Error posting NSQ message:", e);

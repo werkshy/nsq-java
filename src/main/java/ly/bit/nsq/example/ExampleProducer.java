@@ -3,6 +3,8 @@ package ly.bit.nsq.example;
 import ly.bit.nsq.NSQProducer;
 import ly.bit.nsq.exceptions.NSQException;
 
+import java.io.IOException;
+
 public class ExampleProducer {
 
 	public static void main(String... args){
@@ -15,6 +17,9 @@ public class ExampleProducer {
 				producer.put(message);
 				Thread.sleep(1000);
 			} catch (NSQException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} catch (IOException e) {
 				e.printStackTrace();
 				System.exit(1);
 			} catch (InterruptedException e) {
